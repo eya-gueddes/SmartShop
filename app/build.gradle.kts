@@ -3,6 +3,7 @@ plugins {
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
     id("com.google.gms.google-services")
+    id("org.jetbrains.kotlin.kapt")
 }
 
 android {
@@ -12,7 +13,7 @@ android {
     defaultConfig {
         applicationId = "com.eya.smartshop"
         minSdk = 24
-        targetSdk = 36
+        targetSdk = 34
         versionCode = 1
         versionName = "1.0"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
@@ -51,8 +52,26 @@ dependencies {
     implementation(libs.androidx.compose.ui.tooling.preview)
     implementation("androidx.compose.material3:material3:1.4.0")
 
-    // Firebase - Use explicit version temporarily
-    implementation("com.google.firebase:firebase-auth-ktx:23.1.0")
+    // Firebase
+    implementation(platform("com.google.firebase:firebase-bom:33.1.2"))
+    implementation("com.google.firebase:firebase-auth-ktx")
+    implementation("com.google.firebase:firebase-firestore-ktx")
+
+    // Room
+    implementation("androidx.room:room-runtime:2.6.1")
+    implementation("androidx.room:room-ktx:2.6.1")
+    implementation(libs.play.services.analytics.impl)
+    kapt("androidx.room:room-compiler:2.6.1")
+
+    // Coroutine + Lifecycle
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3")
+    implementation("androidx.lifecycle:lifecycle-viewmodel-ktx:2.6.1")
+
+    // Coil pour les images
+    implementation("io.coil-kt:coil-compose:2.5.0")
+
+    // icon
+    implementation("androidx.compose.material:material-icons-extended")
 
     // Test dependencies
     testImplementation(libs.junit)
