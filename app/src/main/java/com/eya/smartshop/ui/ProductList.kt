@@ -6,26 +6,45 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
+import com.eya.smartshop.cart.CartViewModel
 import com.eya.smartshop.product.Product
 import com.eya.smartshop.product.ProductViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ProductListScreen(vm: ProductViewModel) {
+fun ProductListScreen(
+    vm: ProductViewModel,
+    cartVm: CartViewModel,
+    onNavigateToCart: () -> Unit
+) {
 
     val list by vm.products.collectAsState()
     var selectedProduct by remember { mutableStateOf<Product?>(null) }
     var showForm by remember { mutableStateOf(false) }
+    val qtyMap = remember { mutableStateMapOf<String, Int>() }
+
 
     Scaffold(
         topBar = {
             TopAppBar(
                 title = { Text("Products", color = MaterialTheme.colorScheme.onPrimary) },
+                actions = {
+                    IconButton(onClick = { onNavigateToCart() }) {
+                        Icon(
+                            imageVector = Icons.Default.ShoppingCart,
+                            contentDescription = "View Cart",
+                            tint = MaterialTheme.colorScheme.onPrimary
+                        )
+                    }
+                },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.primary
                 )
@@ -55,6 +74,8 @@ fun ProductListScreen(vm: ProductViewModel) {
             ) {
                 items(list) { p ->
 
+                    val orderedQty = qtyMap[p.id] ?: 1
+
                     Card(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -69,11 +90,16 @@ fun ProductListScreen(vm: ProductViewModel) {
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .padding(12.dp),
-                            horizontalArrangement = Arrangement.SpaceBetween
+                            verticalAlignment = Alignment.CenterVertically
                         ) {
 
-                            // IMAGE + INFOS
-                            Row {
+                            // =======================
+                            // LEFT : IMAGE + INFOS
+                            // =======================
+                            Row(
+                                modifier = Modifier.weight(1f),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
                                 AsyncImage(
                                     model = p.imageUrl,
                                     contentDescription = null,
@@ -84,39 +110,79 @@ fun ProductListScreen(vm: ProductViewModel) {
 
                                 Column {
                                     Text(
-                                        p.name,
+                                        text = p.name,
                                         style = MaterialTheme.typography.titleMedium,
-                                        color = MaterialTheme.colorScheme.onSurface
+                                        maxLines = 1,
+                                        overflow = TextOverflow.Ellipsis
                                     )
-                                    Text("Qty: ${p.quantity}", color = MaterialTheme.colorScheme.onSurface)
-                                    Text("Price: ${p.price}", color = MaterialTheme.colorScheme.onSurface)
+                                    Text("Stock: ${p.quantity}")
+                                    Text("Price: ${p.price}")
                                 }
                             }
 
-                            // ICONS
-                            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            // =======================
+                            // RIGHT : ACTIONS + QTY
+                            // =======================
+                            Column(
+                                horizontalAlignment = Alignment.CenterHorizontally
+                            ) {
 
-                                IconButton(
-                                    onClick = {
+                                // ---- ICON BUTTONS
+                                Row(
+                                    horizontalArrangement = Arrangement.spacedBy(4.dp)
+                                ) {
+
+                                    IconButton(onClick = {
                                         selectedProduct = p
                                         showForm = true
+                                    }) {
+                                        Icon(Icons.Default.Edit, contentDescription = "Edit")
                                     }
-                                ) {
-                                    Icon(
-                                        imageVector = Icons.Default.Edit,
-                                        contentDescription = "Modifier",
-                                        tint = MaterialTheme.colorScheme.primary
-                                    )
+
+                                    IconButton(onClick = { vm.delete(p) }) {
+                                        Icon(Icons.Default.Delete, contentDescription = "Delete")
+                                    }
+
+                                    IconButton(
+                                        onClick = {
+                                            cartVm.addProduct(p, orderedQty)
+                                            qtyMap[p.id] = 1
+                                        },
+                                        enabled = p.quantity > 0
+                                    ) {
+                                        Icon(Icons.Default.ShoppingCart, contentDescription = "Add to cart")
+                                    }
                                 }
 
-                                IconButton(
-                                    onClick = { vm.delete(p) }
+                                // ---- QTY CONTROLLER
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically
                                 ) {
-                                    Icon(
-                                        imageVector = Icons.Default.Delete,
-                                        contentDescription = "Supprimer",
-                                        tint = MaterialTheme.colorScheme.secondary
-                                    )
+
+                                    IconButton(
+                                        onClick = { qtyMap[p.id] = orderedQty - 1 },
+                                        enabled = orderedQty > 1
+                                    ) {
+                                        Text("−", style = MaterialTheme.typography.titleLarge)
+                                    }
+
+                                    Surface(
+                                        shape = MaterialTheme.shapes.small,
+                                        tonalElevation = 2.dp
+                                    ) {
+                                        Text(
+                                            text = orderedQty.toString(),
+                                            modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp),
+                                            style = MaterialTheme.typography.titleMedium
+                                        )
+                                    }
+
+                                    IconButton(
+                                        onClick = { qtyMap[p.id] = orderedQty + 1 },
+                                        enabled = orderedQty < p.quantity
+                                    ) {
+                                        Text("+", style = MaterialTheme.typography.titleLarge)
+                                    }
                                 }
                             }
                         }

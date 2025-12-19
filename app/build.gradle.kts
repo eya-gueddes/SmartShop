@@ -61,12 +61,16 @@ dependencies {
     implementation("androidx.room:room-runtime:2.6.1")
     implementation("androidx.room:room-ktx:2.6.1")
     implementation(libs.play.services.analytics.impl)
+    implementation(libs.androidx.compose.ui.text)
     kapt("androidx.room:room-compiler:2.6.1")
 
     // Coroutine + Lifecycle
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3")
     implementation("androidx.lifecycle:lifecycle-viewmodel-ktx:2.6.1")
 
+    // navigation
+    implementation("androidx.navigation:navigation-compose:2.7.3")
+    
     // Coil pour les images
     implementation("io.coil-kt:coil-compose:2.5.0")
 

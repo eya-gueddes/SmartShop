@@ -16,6 +16,14 @@ class ProductViewModel(private val repo: ProductRepository) : ViewModel() {
         repo.startRemoteListener()
     }
 
+    fun updateQuantity(productId: String, newQty: Int) {
+        viewModelScope.launch {
+            val product = products.value.find { it.id == productId } ?: return@launch
+            val updated = product.copy(quantity = newQty, updatedAt = System.currentTimeMillis())
+            repo.upsert(updated)
+        }
+    }
+
     private fun validate(name: String, qty: Int, price: Double): String? {
         if (name.isBlank()) return "Le nom est requis"
         if (price <= 0.0) return "Le prix doit être > 0"
